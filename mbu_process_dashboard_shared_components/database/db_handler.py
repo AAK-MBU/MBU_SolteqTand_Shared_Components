@@ -179,7 +179,7 @@ class SolteqTandDatabase:
                 ds.rn,
                 ds.DocumentStoreStatusId,
                 p.cpr,
-				CONCAT('\\\\srvapptmt02\\WebDav\\', SUBSTRING(UniqueFilename,0,3),'\\',UniqueFilename) AS fileSourcePath
+                CONCAT('\\\\srvapptmt02\\WebDav\\', SUBSTRING(UniqueFilename,0,3),'\\',UniqueFilename) AS fileSourcePath
             FROM [tmtdata_prod].[dbo].[PATIENT] p
             JOIN LatestActiveDocuments ds ON ds.entityId = p.patientId
             WHERE 1=1
