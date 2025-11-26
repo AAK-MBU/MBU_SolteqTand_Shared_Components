@@ -1,4 +1,5 @@
 """This module contains the PatientHandler class, which manages patient-related actions in the Solteq Tand application."""
+
 import time
 import uiautomation as auto
 
@@ -35,7 +36,7 @@ class PatientHandler(HandlerBase):
         """
         # Navigate to stamkort
         found_ssn = self.get_ssn_stamkort()
-        found_ssn = found_ssn.replace("-","")
+        found_ssn = found_ssn.replace("-", "")
         if found_ssn != ssn:
             raise NotMatchingError(in_msg=f"Found SSN {found_ssn} does not match input {ssn}")
         else:
@@ -200,7 +201,7 @@ class PatientHandler(HandlerBase):
                 auto.ComboBoxControl,
                 {"AutomationId": "ComboPatientDentistReg"},
                 search_depth=10
-                )
+            )
 
             def _get_selected_value():
                 """Get the selected value from the ComboBox."""

@@ -1,4 +1,5 @@
 """This module contains the EDIHandler class for handling EDI portal interactions."""
+
 import time
 import uiautomation as auto
 

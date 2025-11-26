@@ -22,7 +22,7 @@ class JournalNoteHandler(HandlerBase):
             auto.DocumentControl,
             {"AutomationId": "RichTextBoxInput"},
             search_depth=21
-            )
+        )
 
         input_box = self.app_window.DocumentControl(AutomationId="RichTextBoxInput")
         input_box_value_pattern = input_box.GetValuePattern()

@@ -62,7 +62,7 @@ class AppointmentHandler(HandlerBase):
             appointment_control: auto.ControlType,
             set_status: str,
             send_msg: bool = False
-        ):
+    ):
         """
         Changes status of appointment and optionally sends message
 
@@ -106,8 +106,8 @@ class AppointmentHandler(HandlerBase):
         )
         # Load status options into dict with controls, names and lowercase names
         status_dict = {
-            'ctrls' : [elem for elem in status_list_ctrl.GetChildren() if elem.ControlType == 50007],
-            'names' : [elem.Name for elem in status_list_ctrl.GetChildren() if elem.ControlType == 50007],
+            'ctrls': [elem for elem in status_list_ctrl.GetChildren() if elem.ControlType == 50007],
+            'names': [elem.Name for elem in status_list_ctrl.GetChildren() if elem.ControlType == 50007],
             'names_lo': [elem.Name.lower() for elem in status_list_ctrl.GetChildren() if elem.ControlType == 50007]
         }
 
@@ -120,12 +120,12 @@ class AppointmentHandler(HandlerBase):
             if send_msg:
                 save_button = self.find_element_by_property(
                     control=booking_control,
-                    automation_id = "ButtonSavePrint"
+                    automation_id="ButtonSavePrint"
                 )
             else:
                 save_button = self.find_element_by_property(
                     control=booking_control,
-                    automation_id = "ButtonOk"
+                    automation_id="ButtonOk"
                 )
             save_button.SendKeys('{ENTER}')
             # Check for notification window pop up
@@ -169,7 +169,7 @@ class AppointmentHandler(HandlerBase):
                 # Save original status
                 save_button = self.find_element_by_property(
                     control=booking_control,
-                    automation_id = "ButtonOk"
+                    automation_id="ButtonOk"
                 )
                 save_button.SendKeys('{ENTER}')
                 # Accept despite warning
@@ -270,7 +270,7 @@ class AppointmentHandler(HandlerBase):
 
         return appointment_data
 
-    def create_booking_reminder(self, booking_reminder_data: dict):
+    def create_booking_reminder(self, booking_reminder_data: dict, booking_clinic: str | None = None):
         """
         Creates a booking reminder for the patient.
         """
@@ -282,19 +282,73 @@ class AppointmentHandler(HandlerBase):
                 auto.PaneControl,
                 {"AutomationId": "ButtonBookingNew"},
                 search_depth=14
-                )
+            )
             create_booking_button.GetLegacyIAccessiblePattern().DoDefaultAction()
 
             booking_window = self.wait_for_control(
                 auto.WindowControl,
                 {"AutomationId": "MainFrame"},
                 search_depth=2
-                )
+            )
 
             # Fill out ressourcer group
             manage_booking = booking_window.PaneControl(AutomationId="viewPortPanel").PaneControl(AutomationId="ManageBookingControl")
             resources_group = manage_booking.GroupControl(AutomationId="Ressourcer")
 
+            # --- NEW: set booking clinic if provided ---
+            if booking_clinic:
+                # Locate the Klinik pane inside the group
+                for child in resources_group.GetChildren():
+                    if child.ControlTypeName == "PaneControl":
+                        edit_children = [
+                            c for c in child.GetChildren()
+                            if c.ControlTypeName == "EditControl"
+                        ]
+                        if edit_children:
+                            clinic_selector = child
+                            break
+
+                if not clinic_selector:
+                    raise RuntimeError("Could not locate Klinik field inside Ressourcer")
+
+                # Find the clickable button (the icon)
+                clinic_button = None
+                for c in clinic_selector.GetChildren():
+                    if c.ControlTypeName == "PaneControl":
+                        clinic_button = c
+                        break
+
+                if not clinic_button:
+                    raise RuntimeError("Could not locate Klinik selector button")
+
+                clinic_button.Click(simulateMove=False, waitTime=0)
+
+                # Wait for Find Klinic list
+                clinic_list = self.wait_for_control(
+                    auto.WindowControl,
+                    {"AutomationId": "FormFindClinics"},
+                    search_depth=10
+                )
+
+                # Reset + search
+                clinic_list.PaneControl(AutomationId="Panel1").PaneControl(
+                    AutomationId="ButtonReset"
+                ).Click(simulateMove=False, waitTime=0)
+
+                clinic_list.PaneControl(AutomationId="Panel1").PaneControl(
+                    AutomationId="ButtonSearchClinics"
+                ).Click(simulateMove=False, waitTime=0)
+
+                # Select the requested clinic
+                clinic_item = clinic_list.ListControl(
+                    AutomationId="ListClinics"
+                ).ListItemControl(Name=booking_clinic, timeout=30)
+
+                clinic_item.GetPattern(10017).ScrollIntoView()
+                clinic_item.SetFocus()
+                clinic_item.DoubleClick(simulateMove=False, waitTime=0)
+
+            # Continue filling the rest of the fields as before
             for child in resources_group.GetChildren():
                 if child.ControlTypeName == "ComboBoxControl":
                     match child.Name:
@@ -305,7 +359,9 @@ class AppointmentHandler(HandlerBase):
                         case "Stol":
                             child.GetPattern(auto.PatternId.ValuePattern).SetValue(booking_reminder_data["comboBoxChair"])
 
-            # Fill out text booking field
+            # -------------------------
+            #  Fill out booking text
+            # -------------------------
             text_booking_field_group = manage_booking.GroupControl(AutomationId="GroupBox5")
             for child in text_booking_field_group.GetChildren():
                 match child.AutomationId:
@@ -313,7 +369,9 @@ class AppointmentHandler(HandlerBase):
                         if child.GetPattern(auto.PatternId.ValuePattern).Value != booking_reminder_data["textBoxBookingText"]:
                             child.GetPattern(auto.PatternId.ValuePattern).SetValue(booking_reminder_data["textBoxBookingText"])
 
-            # Fill out date and time
+            # -------------------------
+            #  Fill out date + time
+            # -------------------------
             date_and_time_group = manage_booking.GroupControl(AutomationId="GroupBox4")
 
             for child in date_and_time_group.GetChildren():
@@ -329,6 +387,7 @@ class AppointmentHandler(HandlerBase):
                     case "DateTimePickerDate":
                         child.SendKeys(booking_reminder_data["futureDate"])
 
+            # Save booking
             manage_booking.PaneControl(AutomationId="ButtonOk").Click(simulateMove=True, waitTime=0)
 
             booking_window_warning = self.wait_for_control(
@@ -337,6 +396,7 @@ class AppointmentHandler(HandlerBase):
                 search_depth=4
             )
             booking_window_warning.PaneControl(AutomationId="ButtonOk").Click(simulateMove=True, waitTime=0)
+
         except Exception as e:
             print(f"Error while creating booking reminder: {e}")
             raise

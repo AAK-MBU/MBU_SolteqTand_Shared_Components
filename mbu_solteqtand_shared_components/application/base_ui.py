@@ -1,4 +1,5 @@
 """Base UI-Automation helper methods for SolteqTand project."""
+
 import time
 import uiautomation as auto
 
