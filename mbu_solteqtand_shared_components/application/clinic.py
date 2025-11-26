@@ -35,10 +35,10 @@ class ClinicHandler(HandlerBase):
                 box_clinic = box_clinic_parent.PaneControl(
                     searchDepth=2,
                     AutomationId="ControlClinicSelectorPatientClinicReg"
-                    ).PaneControl(
-                        searchDepth=2,
-                        AutomationId="PictureBoxClinic"
-                        )
+                ).PaneControl(
+                    searchDepth=2,
+                    AutomationId="PictureBoxClinic"
+                )
                 box_clinic.Click(simulateMove=False, waitTime=0)
 
                 clinic_list = self.wait_for_control(

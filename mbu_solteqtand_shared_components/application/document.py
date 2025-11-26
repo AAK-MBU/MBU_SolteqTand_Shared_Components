@@ -3,11 +3,15 @@
 import os
 import shutil
 import time
+
+from datetime import datetime
+
 import psutil
+
+import uiautomation as auto
+
 from psutil import NoSuchProcess, ZombieProcess, AccessDenied
 from docx2pdf import convert
-import uiautomation as auto
-from datetime import datetime
 
 from .handler_base import HandlerBase
 

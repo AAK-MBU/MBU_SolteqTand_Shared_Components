@@ -20,7 +20,7 @@ class EventHandler(HandlerBase):
                 auto.ListControl,
                 {"AutomationId": "ListView1"},
                 search_depth=9
-                )
+            )
 
             target_values = {"Afgang til klinik 751", "Stamklinik afgang", "Nej"}
             for item in list_view.GetChildren():
@@ -37,13 +37,13 @@ class EventHandler(HandlerBase):
                     auto.ButtonControl,
                     {"Name": "Afvikl"},
                     search_depth=10
-                    )
+                )
                 process_button.GetLegacyIAccessiblePattern().DoDefaultAction()
                 create_administrative_note_popup = self.wait_for_control(
                     auto.WindowControl,
                     {"Name": "Opret administrativt notat"},
                     search_depth=3
-                    )
+                )
                 create_administrative_note_popup.ButtonControl(Name="Nej").GetLegacyIAccessiblePattern().DoDefaultAction()
             print("Event processed")
         except Exception as e:

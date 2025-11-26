@@ -297,8 +297,6 @@ class AppointmentHandler(HandlerBase):
 
             # --- NEW: set booking clinic if provided ---
             if booking_clinic:
-
-
                 # Locate the Klinik pane inside the group
                 for child in resources_group.GetChildren():
                     if child.ControlTypeName == "PaneControl":
