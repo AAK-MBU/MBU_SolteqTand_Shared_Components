@@ -270,9 +270,9 @@ class SolteqTandDatabase:
                     e.[eventTriggerDate],
                     p.cpr,
                     e.archived
-            FROM [EVENT] e
-            JOIN [PATIENT] p ON p.patientId = e.entityId
-            JOIN [CLINIC] c ON c.clinicId = e.clinicId
+            FROM [tmtdata_prod].[dbo].[EVENT] e
+            JOIN [tmtdata_prod].[dbo].[PATIENT] p ON p.patientId = e.entityId
+            JOIN [tmtdata_prod].[dbo].[CLINIC] c ON c.clinicId = e.clinicId
             WHERE	1=1
         """
         final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
@@ -300,9 +300,9 @@ class SolteqTandDatabase:
                     k.text AS patientStatus,
                     d.name AS clinicianName
             FROM [tmtdata_prod].[dbo].[PATIENT] p
-            JOIN [CLINIC] c ON c.clinicId = p.preferredDentalClinicId
-            JOIN [KEYWORD] k ON k.keywordId = 'patientStatus' AND k.[value] = p.patientStatus
-            LEFT JOIN [DENTIST] d ON d.dentistId = p.dentistId
+            JOIN [tmtdata_prod].[dbo].[CLINIC] c ON c.clinicId = p.preferredDentalClinicId
+            JOIN [tmtdata_prod].[dbo].[KEYWORD] k ON k.keywordId = 'patientStatus' AND k.[value] = p.patientStatus
+            LEFT JOIN [tmtdata_prod].[dbo].[DENTIST] d ON d.dentistId = p.dentistId
             WHERE	1=1
         """
         final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
@@ -329,13 +329,13 @@ class SolteqTandDatabase:
             FROM
                 [tmtdata_prod].[dbo].[Forloeb] f
             JOIN
-                ForloebSymbolisering fs ON fs.ForloebID = f.ForloebID
+                [tmtdata_prod].[dbo].[ForloebSymbolisering] fs ON fs.ForloebID = f.ForloebID
             JOIN
-                DiagnoseStatus ds ON ds.GEpjID = fs.DiagnoseID
+                [tmtdata_prod].[dbo].[DiagnoseStatus] ds ON ds.GEpjID = fs.DiagnoseID
             JOIN
-                DiagnostikNotat dn ON dn.KontekstID = ds.KontekstID
+                [tmtdata_prod].[dbo].[DiagnostikNotat] dn ON dn.KontekstID = ds.KontekstID
             JOIN
-                PATIENT p ON p.patientId = f.patientId
+                [tmtdata_prod].[dbo].[PATIENT] p ON p.patientId = f.patientId
             WHERE	1=1
         """
         final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
