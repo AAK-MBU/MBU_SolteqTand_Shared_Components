@@ -1,3 +1,5 @@
+import time
+
 import uiautomation as auto
 
 from .handler_base import HandlerBase
@@ -297,7 +299,9 @@ class AppointmentHandler(HandlerBase):
 
             # --- NEW: set booking clinic if provided ---
             if booking_clinic:
+
                 # Locate the Klinik pane inside the group
+                clinic_selector = None
                 for child in resources_group.GetChildren():
                     if child.ControlTypeName == "PaneControl":
                         edit_children = [
@@ -312,41 +316,36 @@ class AppointmentHandler(HandlerBase):
                     raise RuntimeError("Could not locate Klinik field inside Ressourcer")
 
                 # Find the clickable button (the icon)
-                clinic_button = None
-                for c in clinic_selector.GetChildren():
-                    if c.ControlTypeName == "PaneControl":
-                        clinic_button = c
-                        break
+                clinic_button = next(
+                    (c for c in clinic_selector.GetChildren()
+                    if c.ControlTypeName == "PaneControl"),
+                    None
+                )
 
                 if not clinic_button:
                     raise RuntimeError("Could not locate Klinik selector button")
 
                 clinic_button.Click(simulateMove=False, waitTime=0)
 
-                # Wait for Find Klinic list
-                clinic_list = self.wait_for_control(
+                # --- Wait for Find Klinik window ---
+                clinic_window = self.wait_for_control(
                     auto.WindowControl,
                     {"AutomationId": "FormFindClinics"},
-                    search_depth=10
+                    search_depth=5
                 )
 
-                # Reset + search
-                clinic_list.PaneControl(AutomationId="Panel1").PaneControl(
-                    AutomationId="ButtonReset"
-                ).Click(simulateMove=False, waitTime=0)
+                # --- Focus the clinic list ---
+                list_control = clinic_window.ListControl(AutomationId="ListClinics")
+                list_control.SetFocus()
 
-                clinic_list.PaneControl(AutomationId="Panel1").PaneControl(
-                    AutomationId="ButtonSearchClinics"
-                ).Click(simulateMove=False, waitTime=0)
+                # Small delay to avoid sending keys too early
+                time.sleep(2)
 
-                # Select the requested clinic
-                clinic_item = clinic_list.ListControl(
-                    AutomationId="ListClinics"
-                ).ListItemControl(Name=booking_clinic, timeout=30)
+                # --- Fast selection: type name + ENTER ---
+                list_control.SendKeys(booking_clinic + "{ENTER}")
 
-                clinic_item.GetPattern(10017).ScrollIntoView()
-                clinic_item.SetFocus()
-                clinic_item.DoubleClick(simulateMove=False, waitTime=0)
+                # Optional: wait a moment to ensure dialog closes
+                time.sleep(2)
 
             # Continue filling the rest of the fields as before
             for child in resources_group.GetChildren():
