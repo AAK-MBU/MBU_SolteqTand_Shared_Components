@@ -317,8 +317,10 @@ class AppointmentHandler(HandlerBase):
 
                 # Find the clickable button (the icon)
                 clinic_button = next(
-                    (c for c in clinic_selector.GetChildren()
-                    if c.ControlTypeName == "PaneControl"),
+                    (
+                        c for c in clinic_selector.GetChildren()
+                        if c.ControlTypeName == "PaneControl"
+                    ),
                     None
                 )
 
