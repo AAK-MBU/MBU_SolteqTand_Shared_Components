@@ -274,7 +274,7 @@ class DocumentHandler(HandlerBase):
             ).GetLegacyIAccessiblePattern().DoDefaultAction()
 
             word_window = self.wait_for_control(
-                auto.WindowControl, {"ClassName": "OpusApp"}, search_depth=2
+                auto.WindowControl, {"ClassName": "OpusApp"}, search_depth=2, timeout=60
             )
 
             def convert_docx_to_pdf(
