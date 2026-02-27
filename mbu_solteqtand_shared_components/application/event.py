@@ -1,3 +1,4 @@
+import time
 import uiautomation as auto
 
 from .handler_base import HandlerBase
@@ -7,6 +8,56 @@ class EventHandler(HandlerBase):
     """
     Handles “Hændelser” under “Stamkort”—specifically processes “Afgang til klinik 751”.
     """
+
+    def create_new_event(self, clinic_name: str, event_text: str):
+        """
+        Opens and creates a new event for the patient
+        """
+
+        try:
+            functions_button = self.find_element_by_property(
+                control=self.app_window,
+                control_type=auto.ControlType.MenuItemControl,
+                name="Funktioner"
+            )
+            functions_button.Click(simulateMove=False, waitTime=0)
+
+            henvis_patient_button = self.find_element_by_property(
+                control=self.app_window,
+                control_type=auto.ControlType.MenuItemControl,
+                name="Henvis patient"
+            )
+            henvis_patient_button.Click(simulateMove=False, waitTime=0)
+
+            time.sleep(1)
+
+            # --- Wait for Find Klinik window ---
+            clinic_window = self.wait_for_control(
+                auto.WindowControl,
+                {"AutomationId": "FormFindClinics"},
+                search_depth=5
+            )
+
+            time.sleep(1)
+
+            # --- Focus the clinic list ---
+            list_control = clinic_window.ListControl(AutomationId="ListClinics")
+            list_control.SetFocus()
+
+            # Small delay to avoid sending keys too early
+            time.sleep(2)
+
+            # --- Fast selection: type name + ENTER ---
+            list_control.SendKeys(clinic_name + "{ENTER}")
+
+            # Optional: wait a moment to ensure dialog closes
+            time.sleep(1)
+
+            # --- Fast selection: type name + ENTER ---
+            list_control.SendKeys(event_text + "{ENTER}")
+
+        except Exception as e:
+            print(f"Error while opening EDI Portal: {e}")
 
     def process_event(self):
         """
