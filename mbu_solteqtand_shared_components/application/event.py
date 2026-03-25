@@ -1,4 +1,7 @@
+"""Module responsible for handling event operations in the Solteq Tand application."""
+
 import time
+
 import uiautomation as auto
 
 from .handler_base import HandlerBase
@@ -6,7 +9,7 @@ from .handler_base import HandlerBase
 
 class EventHandler(HandlerBase):
     """
-    Handles “Hændelser” under “Stamkort”—specifically processes “Afgang til klinik 751”.
+    Handles the processing of events in the Solteq Tand application.
     """
 
     def create_new_event(self, clinic_name: str, event_text: str):
@@ -18,14 +21,14 @@ class EventHandler(HandlerBase):
             functions_button = self.find_element_by_property(
                 control=self.app_window,
                 control_type=auto.ControlType.MenuItemControl,
-                name="Funktioner"
+                name="Funktioner",
             )
             functions_button.Click(simulateMove=False, waitTime=0)
 
             henvis_patient_button = self.find_element_by_property(
                 control=self.app_window,
                 control_type=auto.ControlType.MenuItemControl,
-                name="Henvis patient"
+                name="Henvis patient",
             )
             henvis_patient_button.Click(simulateMove=False, waitTime=0)
 
@@ -33,9 +36,7 @@ class EventHandler(HandlerBase):
 
             # --- Wait for Find Klinik window ---
             clinic_window = self.wait_for_control(
-                auto.WindowControl,
-                {"AutomationId": "FormFindClinics"},
-                search_depth=5
+                auto.WindowControl, {"AutomationId": "FormFindClinics"}, search_depth=5
             )
 
             time.sleep(1)
@@ -56,6 +57,12 @@ class EventHandler(HandlerBase):
             # --- Fast selection: type name + ENTER ---
             list_control.SendKeys(event_text + "{ENTER}")
 
+            dialog_ok_button = self.wait_for_control(
+                auto.ButtonControl, {"Name": "OK"}, search_depth=50
+            )
+
+            dialog_ok_button.GetInvokePattern().Invoke()
+
         except Exception as e:
             print(f"Error while opening EDI Portal: {e}")
 
@@ -68,9 +75,7 @@ class EventHandler(HandlerBase):
             self.open_sub_tab("Hændelser")
 
             list_view = self.wait_for_control(
-                auto.ListControl,
-                {"AutomationId": "ListView1"},
-                search_depth=9
+                auto.ListControl, {"AutomationId": "ListView1"}, search_depth=9
             )
 
             target_values = {"Afgang til klinik 751", "Stamklinik afgang", "Nej"}
@@ -82,20 +87,23 @@ class EventHandler(HandlerBase):
                         break
 
             if matching_row:
-                if matching_row.GetPattern(auto.PatternId.TogglePattern).ToggleState == 0:
+                if (
+                    matching_row.GetPattern(auto.PatternId.TogglePattern).ToggleState
+                    == 0
+                ):
                     matching_row.GetPattern(auto.PatternId.TogglePattern).Toggle()
                 process_button = self.wait_for_control(
-                    auto.ButtonControl,
-                    {"Name": "Afvikl"},
-                    search_depth=10
+                    auto.ButtonControl, {"Name": "Afvikl"}, search_depth=10
                 )
                 process_button.GetLegacyIAccessiblePattern().DoDefaultAction()
                 create_administrative_note_popup = self.wait_for_control(
                     auto.WindowControl,
                     {"Name": "Opret administrativt notat"},
-                    search_depth=3
+                    search_depth=3,
                 )
-                create_administrative_note_popup.ButtonControl(Name="Nej").GetLegacyIAccessiblePattern().DoDefaultAction()
+                create_administrative_note_popup.ButtonControl(
+                    Name="Nej"
+                ).GetLegacyIAccessiblePattern().DoDefaultAction()
             print("Event processed")
         except Exception as e:
             print(f"Error while processing event: {e}")
@@ -113,9 +121,7 @@ class EventHandler(HandlerBase):
             self.open_sub_tab("Hændelser")
 
             list_view = self.wait_for_control(
-                auto.ListControl,
-                {"AutomationId": "ListView1"},
-                search_depth=9
+                auto.ListControl, {"AutomationId": "ListView1"}, search_depth=9
             )
 
             target_values = {"TEST: Ny tilflytter", "Henvisning", "Nej"}
@@ -130,13 +136,14 @@ class EventHandler(HandlerBase):
                         break
 
             if matching_row:
-                if matching_row.GetPattern(auto.PatternId.TogglePattern).ToggleState == 0:
+                if (
+                    matching_row.GetPattern(auto.PatternId.TogglePattern).ToggleState
+                    == 0
+                ):
                     matching_row.GetPattern(auto.PatternId.TogglePattern).Toggle()
 
                 process_button = self.wait_for_control(
-                    auto.ButtonControl,
-                    {"Name": "Afvikl"},
-                    search_depth=10
+                    auto.ButtonControl, {"Name": "Afvikl"}, search_depth=10
                 )
 
                 process_button.GetLegacyIAccessiblePattern().DoDefaultAction()
@@ -144,10 +151,12 @@ class EventHandler(HandlerBase):
                 create_administrative_note_popup = self.wait_for_control(
                     auto.WindowControl,
                     {"Name": "Opret administrativt notat"},
-                    search_depth=3
+                    search_depth=3,
                 )
 
-                create_administrative_note_popup.ButtonControl(Name="Nej").GetLegacyIAccessiblePattern().DoDefaultAction()
+                create_administrative_note_popup.ButtonControl(
+                    Name="Nej"
+                ).GetLegacyIAccessiblePattern().DoDefaultAction()
 
             print("Event processed")
 
