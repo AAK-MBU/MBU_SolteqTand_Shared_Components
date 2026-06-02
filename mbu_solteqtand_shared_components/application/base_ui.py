@@ -107,7 +107,7 @@ class BaseUI:
         # Handle popup when closin main window
         if window_name.lower().startswith("hovedvindue"):
 
-            pop_up_window = window_to_close.WindowControl(Name="TMT - Afslut")
+            pop_up_window = window_to_close.WindowControl(Name="Tand - Afslut")
             pop_up_window.SetFocus()
             pop_up_window.ButtonControl(Name="Ja").Click(simulateMove=False, waitTime=0)
 
