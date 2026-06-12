@@ -10,9 +10,7 @@ class JournalNoteHandler(HandlerBase):
     Handles the processing of journal notes in the Solteq Tand application.
     """
 
-    def _set_department_journals(
-        self, department: str = "Generel Journal - Påbegyndt"
-    ) -> None:
+    def _set_department_journals(self, department: str) -> None:
         """
         Sets the department journal combobox to the given value.
 
@@ -41,7 +39,12 @@ class JournalNoteHandler(HandlerBase):
 
         raise ValueError(f"No department journal found starting with: '{department}'")
 
-    def create_journal_note(self, note_message: str, checkmark_in_complete: bool):
+    def create_journal_note(
+        self,
+        note_message: str,
+        checkmark_in_complete: bool,
+        department: str = "Generel Journal - Påbegyndt",
+    ):
         """
         Creates a journal note for the given patient.
 
@@ -51,7 +54,7 @@ class JournalNoteHandler(HandlerBase):
         """
         self.open_tab("Journal")
 
-        self._set_department_journals()
+        self._set_department_journals(department=department)
 
         self.wait_for_control(
             auto.DocumentControl, {"AutomationId": "RichTextBoxInput"}, search_depth=21
