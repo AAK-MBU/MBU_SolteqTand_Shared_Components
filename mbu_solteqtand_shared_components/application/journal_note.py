@@ -10,6 +10,37 @@ class JournalNoteHandler(HandlerBase):
     Handles the processing of journal notes in the Solteq Tand application.
     """
 
+    def _set_department_journals(
+        self, department: str = "Generel Journal - Påbegyndt"
+    ) -> None:
+        """
+        Sets the department journal combobox to the given value.
+
+        Args:
+            department (str): The department journal to select. Matches on startswith,
+                so partial values like "Generel Journal - Påbegyndt" will match
+                "Generel Journal - Påbegyndt - 11-11-2024" etc.
+                Defaults to "Generel Journal - Påbegyndt".
+
+        Raises:
+            ValueError: If no department journal is found starting with the given value.
+        """
+
+        combobox = self.app_window.ComboBoxControl(AutomationId="cmbDepartmentJournals")
+        combobox.SetFocus()
+
+        # Expand the combobox to load all options
+        expand_pattern = combobox.GetExpandCollapsePattern()
+        expand_pattern.Expand()
+
+        # Find the item that starts with the department string
+        for item in combobox.GetChildren():
+            if item.Name.startswith(department):
+                item.Click(simulateMove=False, waitTime=0)
+                return
+
+        raise ValueError(f"No department journal found starting with: '{department}'")
+
     def create_journal_note(self, note_message: str, checkmark_in_complete: bool):
         """
         Creates a journal note for the given patient.
@@ -19,6 +50,8 @@ class JournalNoteHandler(HandlerBase):
             checkmark_in_complete (bool): Checks the checkmark in 'Afslut'.
         """
         self.open_tab("Journal")
+
+        self._set_department_journals()
 
         self.wait_for_control(
             auto.DocumentControl, {"AutomationId": "RichTextBoxInput"}, search_depth=21
