@@ -83,7 +83,7 @@ class PatientHandler(HandlerBase):
         except TimeoutError:
             error_window = self.wait_for_control(
                 auto.WindowControl,
-                {'Name': 'TMT - Åbn patient'},
+                {'Name': 'Tand - Åbn patient'},
                 search_depth=2,
                 timeout=10
             )
