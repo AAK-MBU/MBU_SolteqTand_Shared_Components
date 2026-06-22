@@ -4,7 +4,8 @@ import os
 import shutil
 import time
 
-from datetime import datetime
+from datetime import datetime, date
+from dateutil.relativedelta import relativedelta
 
 import psutil
 
@@ -185,10 +186,8 @@ class DocumentHandler(HandlerBase):
         try:
             self.open_tab("Stamkort")
 
-            from_date = time.strftime("%d-%m-%Y")
-            to_date = time.strftime(
-                "%d-%m-%Y", time.localtime(time.time() + 50 * 365 * 86400)
-            )
+            from_date = (date.today() - relativedelta(years=50)).strftime("%d-%m-%Y")
+            to_date = (date.today() + relativedelta(years=50)).strftime("%d-%m-%Y")
 
             from_date_field = self.wait_for_control(
                 auto.PaneControl,
