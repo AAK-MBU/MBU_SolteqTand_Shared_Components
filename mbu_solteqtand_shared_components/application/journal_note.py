@@ -1,5 +1,7 @@
 """Module responsible for handling journal note operations in the Solteq Tand application."""
 
+import time
+
 import uiautomation as auto
 
 from .handler_base import HandlerBase
@@ -33,9 +35,16 @@ class JournalNoteHandler(HandlerBase):
 
         # Find the item that starts with the department string
         for item in combobox.GetChildren():
+            # Some uiautomation versions return items directly
             if item.Name.startswith(department):
                 item.Click(simulateMove=False, waitTime=0)
                 return
+            # Others return the ComboLBox wrapper — look one level deeper
+            if item.ControlTypeName == "ListControl":
+                for subitem in item.GetChildren():
+                    if subitem.Name.startswith(department):
+                        subitem.Click(simulateMove=False, waitTime=0)
+                        return
 
         raise ValueError(f"No department journal found starting with: '{department}'")
 

@@ -76,7 +76,7 @@ class PatientHandler(HandlerBase):
             patient_window = self.wait_for_control(
                 auto.WindowControl,
                 {'AutomationId': 'FormPatient'},
-                timeout=5
+                timeout=10
             )
             self.app_window = patient_window
 
