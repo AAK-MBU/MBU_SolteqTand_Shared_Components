@@ -489,11 +489,20 @@ class DocumentHandler(HandlerBase):
                 name="Fil",
             )
             menu_fil_button.Click(simulateMove=False, waitTime=0)
-            print_journal_button = self.find_element_by_property(
+            time.sleep(1)
+            fil_dropdown = self.find_element_by_property(
                 control=self.app_window,
-                control_type=auto.ControlType.MenuItemControl,
-                name="Udskriv journal",
+                control_type=auto.ControlType.MenuControl,
+                name="Fil",
             )
+            print_journal_button = None
+            if fil_dropdown:
+                for child in fil_dropdown.GetChildren():
+                    if child.Name.startswith("Udskriv journal"):
+                        print_journal_button = child
+                        break
+            if not print_journal_button:
+                raise RuntimeError("Could not find 'Udskriv journal' in Fil menu")
             print_journal_button.Click(simulateMove=False, waitTime=0)
 
             print_journal_window = self.wait_for_control(
