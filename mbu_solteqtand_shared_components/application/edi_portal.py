@@ -145,8 +145,8 @@ class EDIHandler(HandlerBase):
 
             table_dentists = self.wait_for_control(
                 auto.TableControl,
-                {"AutomationId": "table_id1"},
-                search_depth=25,
+                {"AutomationId": "dtRecipients"},
+                search_depth=50,
             )
             grid_pattern = table_dentists.GetPattern(auto.PatternId.GridPattern)
             row_count = grid_pattern.RowCount
