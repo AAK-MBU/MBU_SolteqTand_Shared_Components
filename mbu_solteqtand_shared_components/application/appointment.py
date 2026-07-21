@@ -188,6 +188,97 @@ class AppointmentHandler(HandlerBase):
             print(f"{set_status} not in list. Possible status choices are: {', '.join(status_dict['names'])}")
             raise Exception
 
+    def change_appointment_status_handle_warning(
+            self,
+            appointment_control: auto.ControlType,
+            set_status: str,
+            warning_button: str = "ButtonOk",
+            send_msg: bool = False
+    ):
+        """
+        Second version of change_appointment_status: on a booking warning ("Advarsler"),
+        press the given warning_button instead of reverting the status change.
+
+        Args:
+            appointment_control (Control): Control identifying the appointment to change.
+            set_status (str): The status to change the appointment to.
+            warning_button (str, optional): Which FormBookingWarnings button to press if a
+                warning appears: "ButtonOk" (Godkend trods advarsel),
+                "ButtonChangeManual" (Ret manuelt) or "ButtonFindNewTimeSlot" (Find ny tid).
+                Defaults to "ButtonOk".
+            send_msg (bool, optional): Whether to send a message when the status is changed.
+        """
+        appointment_control.GetInvokePattern().Invoke()
+
+        booking_control = self.wait_for_control(
+            control_type=auto.PaneControl,
+            search_params={'AutomationId': 'ManageBookingControl'},
+            search_depth=3
+        )
+
+        # Find appointment status dropdown
+        status_control = self.find_element_by_property(
+            control=booking_control,
+            control_type=50003,
+            name='Status'
+        )
+
+        # Open dropdown
+        self.find_element_by_property(
+            control=status_control,
+            control_type=50000
+        ).GetInvokePattern().Invoke()
+
+        # Get list control for all status options
+        status_list_ctrl = self.wait_for_control(
+            control_type=auto.ListControl,
+            search_params={'ClassName': 'ComboLBox'}
+        )
+        status_dict = {
+            'ctrls': [elem for elem in status_list_ctrl.GetChildren() if elem.ControlType == 50007],
+            'names': [elem.Name for elem in status_list_ctrl.GetChildren() if elem.ControlType == 50007],
+            'names_lo': [elem.Name.lower() for elem in status_list_ctrl.GetChildren() if elem.ControlType == 50007]
+        }
+
+        if set_status.lower() not in status_dict['names_lo']:
+            print(f"{set_status} not in list. Possible status choices are: {', '.join(status_dict['names'])}")
+            raise Exception
+
+        # Select the new status
+        list_no = status_dict['names_lo'].index(set_status.lower())
+        status_dict['ctrls'][list_no].GetInvokePattern().Invoke()
+
+        # Save
+        self.app_window = booking_control
+        if send_msg:
+            save_button = self.find_element_by_property(control=booking_control, automation_id="ButtonSavePrint")
+        else:
+            save_button = self.find_element_by_property(control=booking_control, automation_id="ButtonOk")
+        save_button.SendKeys('{ENTER}')
+
+        # Check for notification window pop up
+        try:
+            notification_ctrl = self.wait_for_control(
+                control_type=auto.PaneControl,
+                search_params={'AutomationId': 'BookingNotificationsControl'},
+                search_depth=3,
+                timeout=5
+            )
+            close_button = self.find_element_by_property(control=notification_ctrl, automation_id="ButtonCancel")
+            close_button.SendKeys('{ENTER}')
+            return None
+        except TimeoutError:
+            pass
+
+        # Check for warning window pop up -> press the requested button
+        # (default "ButtonOk" = "Godkend trods advarsel"), letting the change stand
+        try:
+            self.handle_error_on_booking_save(slct_button=warning_button)
+        except TimeoutError:
+            pass
+
+        return None
+
     def handle_error_on_booking_save(self, slct_button: str):
         """Handle error window when saving booking. Select button to press"""
         buttons = [

@@ -17,23 +17,35 @@ class EDIHandler(HandlerBase):
         Opens the EDI portal in the SolteqTand application.
         """
         try:
-            menu_edi_button = self.find_element_by_property(
-                control=self.app_window,
-                control_type=auto.ControlType.MenuItemControl,
-                name="EDI Portal",
+            self.app_window.SetFocus()
+            time.sleep(0.5)
+
+            menu_edi_button = self.wait_for_control(
+                auto.MenuItemControl,
+                {"Name": "EDI Portal"},
+                search_depth=10,
+                timeout=10,
             )
-            menu_edi_button.Click(simulateMove=False, waitTime=0)
-            journalforsendelse_button = self.find_element_by_property(
-                control=self.app_window,
-                control_type=auto.ControlType.MenuItemControl,
-                name="Opret journalforsendelse",
+            if not menu_edi_button:
+                raise RuntimeError("Could not find 'EDI Portal' menu item")
+            menu_edi_button.GetInvokePattern().Invoke()
+            time.sleep(1)
+
+            journalforsendelse_button = self.wait_for_control(
+                auto.MenuItemControl,
+                {"Name": "Opret journalforsendelse"},
+                search_depth=10,
+                timeout=10,
             )
-            journalforsendelse_button.Click(simulateMove=False, waitTime=0)
+            if not journalforsendelse_button:
+                raise RuntimeError("Could not find 'Opret journalforsendelse' menu item")
+            journalforsendelse_button.GetInvokePattern().Invoke()
 
             time.sleep(5)
 
         except Exception as e:
             print(f"Error while opening EDI Portal: {e}")
+            raise
 
     def close_edi_portal(self):
         """

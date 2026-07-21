@@ -113,8 +113,19 @@ class PatientHandler(HandlerBase):
             TimeoutError: If the patient window does not close within the expected time.
         """
 
-        self.app_window.SetFocus()
-        self.app_window.GetWindowPattern().Close()
+        # Re-acquire the patient window instead of trusting self.app_window: other handlers
+        # (e.g. the appointment/booking handler) reassign self.app_window to a sub-pane
+        # (a PaneControl, which has no WindowPattern), so relying on it here can crash with
+        # "'PaneControl' object has no attribute 'GetWindowPattern'" even though the window is open.
+        patient_window = self.wait_for_control(
+            auto.WindowControl,
+            {'AutomationId': 'FormPatient'},
+            search_depth=2,
+            timeout=5
+        )
+
+        patient_window.SetFocus()
+        patient_window.GetWindowPattern().Close()
 
         self.app_window = self.wait_for_control_to_disappear(
             auto.WindowControl,

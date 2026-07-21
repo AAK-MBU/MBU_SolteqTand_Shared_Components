@@ -167,7 +167,7 @@ class EventHandler(HandlerBase):
 
     def process_target_event(self, target_values: dict):
         """
-        Processes the event 'Tilflytter' under the 'Stamkort' tab.
+        Processes the target event under the 'Stamkort' tab.
         """
 
         matching_row = None
@@ -218,4 +218,3 @@ class EventHandler(HandlerBase):
             print(f"Error while processing event: {e}")
 
             raise
-

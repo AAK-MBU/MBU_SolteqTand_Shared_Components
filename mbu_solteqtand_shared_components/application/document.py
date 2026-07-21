@@ -244,6 +244,7 @@ class DocumentHandler(HandlerBase):
             for item in form_mail_merge_expanded.GetChildren():
                 if item.Name == metadata["templateName"]:
                     print(f"Selecting '{metadata['templateName']}'")
+                    item.GetScrollItemPattern().ScrollIntoView()
                     item.Click(simulateMove=False, waitTime=0)
                     selection_made = True
                     break
