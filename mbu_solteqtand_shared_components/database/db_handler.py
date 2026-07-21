@@ -269,6 +269,7 @@ class SolteqTandDatabase:
                     e.[entityId],
                     e.[eventTriggerDate],
                     p.cpr,
+                    CONCAT(p.firstName, ' ', p.lastName) as fullName,
                     e.archived
             FROM [tmtdata_prod].[dbo].[EVENT] e
             JOIN [tmtdata_prod].[dbo].[PATIENT] p ON p.patientId = e.entityId
@@ -277,6 +278,32 @@ class SolteqTandDatabase:
         """
         final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
         return self._execute_query(final_query, params)
+
+    def get_documents(self, cpr: str, document_name: str, created_after=None):
+        """
+        Return documents journalised for the citizen whose filename matches
+        document_name (LIKE), restricted to the latest active version, optionally
+        only those created on/after created_after.
+
+        Args:
+            cpr (str): The citizen's CPR number.
+            document_name (str): Filename fragment to match (LIKE).
+            created_after (datetime, optional): If given, only documents created on/after this date.
+
+        Returns:
+            list: Matching document records (may be empty).
+        """
+        filters = {
+            "p.cpr": cpr,
+            "ds.OriginalFilename": f"%{document_name}%",
+            "ds.rn": "1",
+            "ds.DocumentStoreStatusId": "1",
+        }
+
+        if created_after is not None:
+            filters["ds.DocumentCreatedDate"] = (">=", created_after)
+
+        return self.get_list_of_documents(filters=filters)
 
     def get_list_of_primary_dental_clinics(self, filters=None, or_filters=None, order_by=None, order_direction="ASC"):
         """
