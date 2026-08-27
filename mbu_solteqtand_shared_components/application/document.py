@@ -185,6 +185,7 @@ class DocumentHandler(HandlerBase):
 
         try:
             self.open_tab("Stamkort")
+            self.open_sub_tab("Behandlingsstatus")
 
             from_date = (date.today() - relativedelta(years=50)).strftime("%d-%m-%Y")
             to_date = (date.today() + relativedelta(years=50)).strftime("%d-%m-%Y")
