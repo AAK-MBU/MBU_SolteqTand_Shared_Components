@@ -21,6 +21,7 @@ dependencies = [
   "pyodbc >= 5.1.0",
   "python-dateutil == 2.9.*",
   "dotenv",
+  "uiautomation",
 ]
 
 [project.optional-dependencies]
