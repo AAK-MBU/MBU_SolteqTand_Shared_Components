@@ -1,10 +1,14 @@
 """This module contains the PatientHandler class, which manages patient-related actions in the Solteq Tand application."""
 
+import logging
 import time
+
 import uiautomation as auto
 
+from .exceptions import NotMatchingError, PatientNotFoundError
 from .handler_base import HandlerBase
-from .exceptions import PatientNotFoundError, NotMatchingError
+
+logger = logging.getLogger(__name__)
 
 
 class PatientHandler(HandlerBase):
@@ -17,15 +21,11 @@ class PatientHandler(HandlerBase):
         self.open_tab("Stamkort")
         stamkort = self.wait_for_control(
             auto.PaneControl,
-            search_params={
-                'AutomationId': 'TabPageRecord'
-            },
-            search_depth=3
+            search_params={"AutomationId": "TabPageRecord"},
+            search_depth=3,
         )
         ssn = self.find_element_by_property(
-            control=stamkort,
-            control_type=50004,
-            automation_id='TextPatientCprNumber'
+            control=stamkort, control_type=50004, automation_id="TextPatientCprNumber"
         )
         ssn = ssn.GetValuePattern().Value
         return ssn
@@ -38,7 +38,9 @@ class PatientHandler(HandlerBase):
         found_ssn = self.get_ssn_stamkort()
         found_ssn = found_ssn.replace("-", "")
         if found_ssn != ssn:
-            raise NotMatchingError(in_msg=f"Found SSN {found_ssn} does not match input {ssn}")
+            raise NotMatchingError(
+                in_msg=f"Found SSN {found_ssn} does not match input {ssn}"
+            )
         else:
             return True
 
@@ -48,19 +50,14 @@ class PatientHandler(HandlerBase):
         searches for the SSN, and opens the patient.
         """
         self.app_window = self.wait_for_control(
-            auto.WindowControl,
-            {'AutomationId': 'FormFront'},
-            search_depth=2,
-            timeout=5
+            auto.WindowControl, {"AutomationId": "FormFront"}, search_depth=2, timeout=5
         )
 
         self.app_window.SetFocus()
-        self.app_window.SendKeys('{Ctrl}o', waitTime=0)
+        self.app_window.SendKeys("{Ctrl}o", waitTime=0)
 
         open_patient_window = self.wait_for_control(
-            auto.WindowControl,
-            {'AutomationId': 'FormOpenPatient'},
-            search_depth=2
+            auto.WindowControl, {"AutomationId": "FormOpenPatient"}, search_depth=2
         )
         open_patient_window.SetFocus()
 
@@ -69,23 +66,21 @@ class PatientHandler(HandlerBase):
 
         ssn_input.SendKeys(text=ssn)
         search_button.SetFocus()
-        search_button.SendKeys('{ENTER}')
+        search_button.SendKeys("{ENTER}")
 
         # Here we handle possible error window popup.
         try:
             patient_window = self.wait_for_control(
-                auto.WindowControl,
-                {'AutomationId': 'FormPatient'},
-                timeout=10
+                auto.WindowControl, {"AutomationId": "FormPatient"}, timeout=10
             )
             self.app_window = patient_window
 
         except TimeoutError:
             error_window = self.wait_for_control(
                 auto.WindowControl,
-                {'Name': 'Tand - Åbn patient'},
+                {"Name": "Tand - Åbn patient"},
                 search_depth=2,
-                timeout=10
+                timeout=10,
             )
 
             if error_window is not None:
@@ -96,9 +91,7 @@ class PatientHandler(HandlerBase):
                 raise PatientNotFoundError
 
         self.app_window = self.wait_for_control(
-            auto.WindowControl,
-            {'AutomationId': 'FormPatient'},
-            timeout=10
+            auto.WindowControl, {"AutomationId": "FormPatient"}, timeout=10
         )
 
         self.check_matching_ssn(ssn=ssn)
@@ -119,9 +112,9 @@ class PatientHandler(HandlerBase):
         # "'PaneControl' object has no attribute 'GetWindowPattern'" even though the window is open.
         patient_window = self.wait_for_control(
             auto.WindowControl,
-            {'AutomationId': 'FormPatient'},
+            {"AutomationId": "FormPatient"},
             search_depth=2,
-            timeout=5
+            timeout=5,
         )
 
         patient_window.SetFocus()
@@ -129,16 +122,13 @@ class PatientHandler(HandlerBase):
 
         self.app_window = self.wait_for_control_to_disappear(
             auto.WindowControl,
-            {'AutomationId': 'FormPatient'},
+            {"AutomationId": "FormPatient"},
             search_depth=2,
-            timeout=30
+            timeout=30,
         )
 
         self.app_window = self.wait_for_control(
-            auto.WindowControl,
-            {'AutomationId': 'FormFront'},
-            search_depth=2,
-            timeout=5
+            auto.WindowControl, {"AutomationId": "FormFront"}, search_depth=2, timeout=5
         )
         self.app_window.SetFocus()
 
@@ -165,20 +155,20 @@ class PatientHandler(HandlerBase):
 
             status_combobox = self.wait_for_control(
                 auto.ComboBoxControl,
-                {'AutomationId': 'ComboPatientStatus'},
-                search_depth=10
+                {"AutomationId": "ComboPatientStatus"},
+                search_depth=10,
             )
             value_pattern = status_combobox.GetPattern(auto.PatternId.ValuePattern)
             current_value = value_pattern.Value
             print(f"Current selected status: '{current_value}'")
-            expand_collapse_pattern = status_combobox.GetPattern(auto.PatternId.ExpandCollapsePattern)
+            expand_collapse_pattern = status_combobox.GetPattern(
+                auto.PatternId.ExpandCollapsePattern
+            )
 
             if current_value != status:
                 expand_collapse_pattern.Expand()
                 status_combobox_expanded = self.wait_for_control(
-                    auto.ListControl,
-                    {'ClassName': 'ComboLBox'},
-                    search_depth=3
+                    auto.ListControl, {"ClassName": "ComboLBox"}, search_depth=3
                 )
 
                 selection_made = False
@@ -190,10 +180,12 @@ class PatientHandler(HandlerBase):
                         break
 
                 if not selection_made:
-                    raise ValueError(f"Expected status '{status}' not found in ComboBox list.")
+                    raise ValueError(
+                        f"Expected status '{status}' not found in ComboBox list."
+                    )
 
                 expand_collapse_pattern.Collapse()
-                self.app_window.SendKeys('{Ctrl}S', waitTime=0)
+                self.app_window.SendKeys("{Ctrl}S", waitTime=0)
                 time.sleep(0.5)
             else:
                 print("Patient is over 16 years old. No change needed.")
@@ -211,7 +203,7 @@ class PatientHandler(HandlerBase):
             patient_dentist_combobox = self.wait_for_control(
                 auto.ComboBoxControl,
                 {"AutomationId": "ComboPatientDentistReg"},
-                search_depth=10
+                search_depth=10,
             )
 
             def _get_selected_value():
@@ -236,11 +228,11 @@ class PatientHandler(HandlerBase):
                 print("Status is already set correctly. No change needed.")
                 return
 
-            patient_dentist_combobox.GetPattern(auto.PatternId.ExpandCollapsePattern).Expand()
+            patient_dentist_combobox.GetPattern(
+                auto.PatternId.ExpandCollapsePattern
+            ).Expand()
             patient_dentist_combobox_expanded = self.wait_for_control(
-                auto.ListControl,
-                {'ClassName': 'ComboLBox'},
-                search_depth=3
+                auto.ListControl, {"ClassName": "ComboLBox"}, search_depth=3
             )
 
             selection_made = False
@@ -252,27 +244,81 @@ class PatientHandler(HandlerBase):
                     break
 
             if not selection_made:
-                raise ValueError(f"Expected status '{expected_value}' not found in ComboBox list.")
+                raise ValueError(
+                    f"Expected status '{expected_value}' not found in ComboBox list."
+                )
 
-            patient_dentist_combobox.GetPattern(auto.PatternId.ExpandCollapsePattern).Collapse()
+            patient_dentist_combobox.GetPattern(
+                auto.PatternId.ExpandCollapsePattern
+            ).Collapse()
             time.sleep(0.5)
             combobox_new_value = _get_selected_value()
             print(f"New selected status: '{combobox_new_value}'")
             if combobox_new_value != expected_value:
-                raise ValueError(f"Failed to set the correct status. Expected '{expected_value}', but got '{combobox_new_value}'.")
+                raise ValueError(
+                    f"Failed to set the correct status. Expected '{expected_value}', but got '{combobox_new_value}'."
+                )
 
-            self.app_window.SendKeys('{Ctrl}S', waitTime=0)
+            self.app_window.SendKeys("{Ctrl}S", waitTime=0)
 
             try:
                 pop_up_dialog = self.wait_for_control(
-                    auto.WindowControl,
-                    {'Name': 'Hændelser'},
-                    search_depth=3,
-                    timeout=5
+                    auto.WindowControl, {"Name": "Hændelser"}, search_depth=3, timeout=5
                 )
-                pop_up_dialog.ButtonControl(Name="Nej").GetLegacyIAccessiblePattern().DoDefaultAction()
+                pop_up_dialog.ButtonControl(
+                    Name="Nej"
+                ).GetLegacyIAccessiblePattern().DoDefaultAction()
             except TimeoutError:
                 print("No pop-up window found.")
         except Exception as e:
             print(f"Error while changing primary treater: {e}")
             raise
+
+    def update_or_change_phone_number(self, phone_number: str) -> None:
+        """
+        Sets the patient's mobile number on Stamkort, inserting it if the field is
+        empty or overwriting an existing value.
+
+        Args:
+            phone_number (str): The number to write. Must not be empty.
+
+        Raises:
+            ValueError: If phone_number is empty or the value did not persist.
+        """
+        if not phone_number:
+            raise ValueError("Phone number cannot be empty.")
+
+        phone_number = phone_number.strip()
+
+        self.open_tab("Stamkort")
+
+        phone_field = self.wait_for_control(
+            auto.EditControl,
+            {"AutomationId": "TextBoxMobileShow"},
+            search_depth=25,
+        )
+
+        value_pattern = phone_field.GetPattern(auto.PatternId.ValuePattern)
+        current_value = (value_pattern.Value or "").strip()
+        logger.info("Current phone number: %s", current_value)
+
+        if current_value == phone_number:
+            logger.info("Phone number already correct. No change needed.")
+            return
+
+        phone_field.SetFocus()
+        value_pattern.SetValue(phone_number)
+
+        phone_field.SendKeys("{Tab}", waitTime=0)
+        time.sleep(0.3)
+
+        self.app_window.SendKeys("{Ctrl}S", waitTime=0)
+        time.sleep(0.5)
+
+        new_value = (
+            phone_field.GetPattern(auto.PatternId.ValuePattern).Value or ""
+        ).strip()
+        if new_value != phone_number:
+            raise ValueError(
+                f"Phone number did not persist. Expected '{phone_number}', got '{new_value}'."
+            )
