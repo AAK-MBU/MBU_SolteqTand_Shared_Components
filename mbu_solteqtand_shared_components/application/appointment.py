@@ -22,6 +22,7 @@ class AppointmentHandler(HandlerBase):
         """
         # Open "Stamkort"
         self.open_tab("Stamkort")
+        self.open_sub_tab("Behandlingsstatus")
 
         # Read elements in list and check that expected element exists
         # First get the list of appointments
