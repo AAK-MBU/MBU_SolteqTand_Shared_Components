@@ -2,6 +2,7 @@
 This module defines the SolteqTandDatabase class, which provides
 an interface to interact with the Solteq Tand database.
 """
+
 import pyodbc
 
 
@@ -38,7 +39,14 @@ class SolteqTandDatabase:
 
         return result
 
-    def _construct_sql_statement(self, base_query, filters=None, or_filters=None, order_by=None, order_direction="ASC"):  # noqa
+    def _construct_sql_statement(
+        self,
+        base_query,
+        filters=None,
+        or_filters=None,
+        order_by=None,
+        order_direction="ASC",
+    ):  # noqa
         """
         Dynamically constructs a SQL query by applying filters.
 
@@ -125,12 +133,18 @@ class SolteqTandDatabase:
 
         # Adding ORDER BY clause
         if order_by:
-            order_direction = "ASC" if order_direction.upper() not in ["ASC", "DESC"] else order_direction.upper()
+            order_direction = (
+                "ASC"
+                if order_direction.upper() not in ["ASC", "DESC"]
+                else order_direction.upper()
+            )
             base_query += f" ORDER BY {order_by} {order_direction}"
 
         return base_query, params
 
-    def get_list_of_documents(self, filters=None, or_filters=None, order_by=None, order_direction="ASC"):
+    def get_list_of_documents(
+        self, filters=None, or_filters=None, order_by=None, order_direction="ASC"
+    ):
         """
         Retrieves a list of documents based on the specified filters.
 
@@ -184,11 +198,15 @@ class SolteqTandDatabase:
             JOIN LatestActiveDocuments ds ON ds.entityId = p.patientId
             WHERE 1=1
         """
-        final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
+        final_query, params = self._construct_sql_statement(
+            base_query, filters, or_filters, order_by, order_direction
+        )
 
         return self._execute_query(final_query, params)
 
-    def get_list_of_extern_dentist(self, filters=None, or_filters=None, order_by=None, order_direction="ASC"):
+    def get_list_of_extern_dentist(
+        self, filters=None, or_filters=None, order_by=None, order_direction="ASC"
+    ):
         """
         Retrieves a list of external dentists associated with the patient.
 
@@ -213,10 +231,14 @@ class SolteqTandDatabase:
             JOIN	[CLINIC] c on c.clinicId = p.privateClinicId
             WHERE	1=1
         """
-        final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
+        final_query, params = self._construct_sql_statement(
+            base_query, filters, or_filters, order_by, order_direction
+        )
         return self._execute_query(final_query, params)
 
-    def get_list_of_bookings(self, filters=None, or_filters=None, order_by=None, order_direction="ASC"):
+    def get_list_of_bookings(
+        self, filters=None, or_filters=None, order_by=None, order_direction="ASC"
+    ):
         """
         Retrieves a list of bookings for the specified patient.
 
@@ -243,11 +265,15 @@ class SolteqTandDatabase:
             JOIN BOOKINGTYPE bt on bt.BookingTypeID = b.BookingTypeID
             WHERE	1=1
         """
-        final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
+        final_query, params = self._construct_sql_statement(
+            base_query, filters, or_filters, order_by, order_direction
+        )
 
         return self._execute_query(final_query, params)
 
-    def get_list_of_events(self, filters=None, or_filters=None, order_by=None, order_direction="ASC"):
+    def get_list_of_events(
+        self, filters=None, or_filters=None, order_by=None, order_direction="ASC"
+    ):
         """
         Retrieves a list of events related to the patient.
 
@@ -276,7 +302,9 @@ class SolteqTandDatabase:
             JOIN [tmtdata_prod].[dbo].[CLINIC] c ON c.clinicId = e.clinicId
             WHERE	1=1
         """
-        final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
+        final_query, params = self._construct_sql_statement(
+            base_query, filters, or_filters, order_by, order_direction
+        )
         return self._execute_query(final_query, params)
 
     def get_documents(self, cpr: str, document_name: str, created_after=None):
@@ -305,7 +333,9 @@ class SolteqTandDatabase:
 
         return self.get_list_of_documents(filters=filters)
 
-    def get_list_of_primary_dental_clinics(self, filters=None, or_filters=None, order_by=None, order_direction="ASC"):
+    def get_list_of_primary_dental_clinics(
+        self, filters=None, or_filters=None, order_by=None, order_direction="ASC"
+    ):
         """
         Retrieves details of the primary dental clinics associated with the patient.
 
@@ -332,10 +362,14 @@ class SolteqTandDatabase:
             LEFT JOIN [tmtdata_prod].[dbo].[DENTIST] d ON d.dentistId = p.dentistId
             WHERE	1=1
         """
-        final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
+        final_query, params = self._construct_sql_statement(
+            base_query, filters, or_filters, order_by, order_direction
+        )
         return self._execute_query(final_query, params)
 
-    def get_list_of_journal_notes(self, filters=None, or_filters=None, order_by=None, order_direction="ASC"):
+    def get_list_of_journal_notes(
+        self, filters=None, or_filters=None, order_by=None, order_direction="ASC"
+    ):
         """
         Retrieves journal notes associated with the specified patient.
 
@@ -365,10 +399,14 @@ class SolteqTandDatabase:
                 [tmtdata_prod].[dbo].[PATIENT] p ON p.patientId = f.patientId
             WHERE	1=1
         """
-        final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
+        final_query, params = self._construct_sql_statement(
+            base_query, filters, or_filters, order_by, order_direction
+        )
         return self._execute_query(final_query, params)
 
-    def get_list_of_clinics(self, filters=None, or_filters=None, order_by=None, order_direction="ASC"):
+    def get_list_of_clinics(
+        self, filters=None, or_filters=None, order_by=None, order_direction="ASC"
+    ):
         """
         Retrieves a list of clinics.
 
@@ -393,5 +431,42 @@ class SolteqTandDatabase:
                 [tmtdata_prod].[dbo].[CLINIC]
             WHERE	1=1
         """
-        final_query, params = self._construct_sql_statement(base_query, filters, or_filters, order_by, order_direction)
+        final_query, params = self._construct_sql_statement(
+            base_query, filters, or_filters, order_by, order_direction
+        )
+        return self._execute_query(final_query, params)
+
+    def get_list_of_sub_journal_notes(
+        self, filters=None, or_filters=None, order_by=None, order_direction="ASC"
+    ):
+        """
+        Retrieves sub journal notes associated with the specified patient.
+
+        Args:
+            filters (dict, optional): Filtering criteria for sub journal note retrieval.
+            or_filters (list of dict, optional): OR conditions for filtering.
+
+        Returns:
+            list: A list of sub journal notes matching the criteria.
+        """
+        base_query = """
+            SELECT
+                ivn.Beskrivelse,
+                ivs.Dokumenteret,
+                ivs.Besluttet,
+                ivn.Art,
+                ivs.EjerArt
+            FROM
+                [tmtdata_prod].[dbo].[Intervention] it
+            JOIN
+                [tmtdata_prod].[dbo].[InterventionsStatus] ivs ON ivs.GEpjID = it.InterventionID
+            JOIN
+                [tmtdata_prod].[dbo].[InterventionsNotat] ivn ON ivn.KontekstID = ivs.KontekstID
+            JOIN
+                [tmtdata_prod].[dbo].[PATIENT] p ON p.patientId = it.patientId
+            WHERE	1=1
+        """
+        final_query, params = self._construct_sql_statement(
+            base_query, filters, or_filters, order_by, order_direction
+        )
         return self._execute_query(final_query, params)
