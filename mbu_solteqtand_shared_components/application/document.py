@@ -36,6 +36,8 @@ class DocumentHandler(HandlerBase):
         Args:
             document_full_path (str, optional): The full path of the document to upload.
             document_type (str, optional): The type of document to select from the dropdown.
+            document_description (str, optional): The description to write into the
+                "Beskrivelse" field of the create-document dialog.
         """
         self.open_tab("Stamkort")
         self.open_sub_tab("Dokumenter")
@@ -180,6 +182,13 @@ class DocumentHandler(HandlerBase):
         """
         Under “Print/Flet patienter” → select template → merge → wait for Word to open,
         convert to PDF, kill WINWORD.EXE, then create_document() with the new PDF.
+
+        Args:
+            metadata (dict): Required keys are "templateName", "destinationPath" and
+                "dischargeDocumentFilename". Optionally "documentType" and
+                "documentDescription" can be supplied; they are passed on to
+                create_document() so the document is journalized with a type and a
+                description. Omitting them keeps the previous behaviour.
         """
         folder_path = rf"{os.environ.get('USERPROFILE')}\AppData\Local\Temp\Care\TMTand"
 
@@ -327,7 +336,11 @@ class DocumentHandler(HandlerBase):
 
             self.kill_process_by_name_safe("WINWORD.EXE")
             self.open_sub_tab("Dokumenter")
-            self.create_document(document_full_path=path_to_converted_file)
+            self.create_document(
+                document_full_path=path_to_converted_file,
+                document_type=metadata.get("documentType"),
+                document_description=metadata.get("documentDescription"),
+            )
         except Exception as e:
             print(f"Error while creating document from template: {e}")
             raise
