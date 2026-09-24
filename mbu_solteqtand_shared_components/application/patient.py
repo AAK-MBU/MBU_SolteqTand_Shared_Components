@@ -10,6 +10,11 @@ from .handler_base import HandlerBase
 
 logger = logging.getLogger(__name__)
 
+# Solteq sometimes puts an advisering confirmation in front of the patient window. Its title
+# is not stable enough to match on, so we recognise it by the opening of its message instead.
+ADVIS_POPUP_TEXT = "Du har valgt at advisere"
+ADVIS_POPUP_BUTTONS = ("OK", "Ja")
+
 
 class PatientHandler(HandlerBase):
     """Handles all patient-related actions in the Solteq Tand application."""
@@ -68,35 +73,85 @@ class PatientHandler(HandlerBase):
         search_button.SetFocus()
         search_button.SendKeys("{ENTER}")
 
-        # Here we handle possible error window popup.
-        try:
-            patient_window = self.wait_for_control(
-                auto.WindowControl, {"AutomationId": "FormPatient"}, timeout=10
-            )
-            self.app_window = patient_window
-
-        except TimeoutError:
-            error_window = self.wait_for_control(
-                auto.WindowControl,
-                {"Name": "Tand - Åbn patient"},
-                search_depth=2,
-                timeout=10,
-            )
-
-            if error_window is not None:
-                error_window_button = error_window.ButtonControl(Name="OK")
-                error_window_button.SetFocus()
-                error_window_button.Click(simulateMove=False, waitTime=0)
-
-                raise PatientNotFoundError
-
-        self.app_window = self.wait_for_control(
-            auto.WindowControl, {"AutomationId": "FormPatient"}, timeout=10
-        )
+        self.app_window = self.wait_for_patient_window()
 
         self.check_matching_ssn(ssn=ssn)
 
         self.app_window.Maximize()
+
+    def dismiss_advis_popup(self):
+        """
+        Closes the 'Du har valgt at advisere ...' dialog if it is currently open.
+
+        The dialog is modal, so it holds back the patient window and makes opening a patient
+        look like a plain timeout. Its full text and buttons are logged whenever it shows up,
+        so the wording it appears with can be confirmed from a process log.
+
+        Returns:
+            bool: True if a dialog was found and dismissed.
+        """
+        popup = self.find_window_containing_text(ADVIS_POPUP_TEXT, search_depth=2)
+        if popup is None:
+            return False
+
+        logger.warning(
+            "Advisering popup is blocking the patient window: %s",
+            " | ".join(self.collect_control_texts(popup)),
+        )
+
+        clicked_button = self.dismiss_dialog(popup, button_names=ADVIS_POPUP_BUTTONS)
+        if clicked_button is None:
+            logger.error(
+                "Could not dismiss the advisering popup, none of the buttons %s were found.",
+                ADVIS_POPUP_BUTTONS,
+            )
+            return False
+
+        logger.info("Dismissed the advisering popup with '%s'.", clicked_button)
+        return True
+
+    def wait_for_patient_window(self, timeout=30, retry_interval=0.5):
+        """
+        Waits for the patient window, clearing the dialogs that can block it.
+
+        Every poll also looks for the advisering popup, which delays the patient window, and
+        for the 'Tand - Åbn patient' error, which means there is no patient to open. Dismissing
+        a popup restarts the timeout, since the patient window only starts opening afterwards.
+
+        Args:
+            timeout (int): Maximum time to wait for the patient window, in seconds.
+            retry_interval (float): Time to wait between polls, in seconds.
+
+        Returns:
+            Control: The patient window.
+
+        Raises:
+            PatientNotFoundError: If Solteq reports that no patient matched the search.
+            TimeoutError: If the patient window does not open within the timeout period.
+        """
+        end_time = time.time() + timeout
+
+        while True:
+            patient_window = auto.WindowControl(
+                searchDepth=2, AutomationId="FormPatient"
+            )
+            if patient_window.Exists(0, 0):
+                return patient_window
+
+            if self.dismiss_advis_popup():
+                end_time = time.time() + timeout
+
+            error_window = auto.WindowControl(searchDepth=2, Name="Tand - Åbn patient")
+            if error_window.Exists(0, 0):
+                self.dismiss_dialog(error_window, button_names=("OK",))
+                raise PatientNotFoundError
+
+            if time.time() >= end_time:
+                raise TimeoutError(
+                    f"The patient window did not open within the {timeout} second timeout."
+                )
+
+            time.sleep(retry_interval)
 
     def close_patient_window(self):
         """
